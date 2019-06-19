@@ -24,7 +24,7 @@ Then run following command to start container, the output will show judgement re
 $ docker run -v "e:/usr/pushy":/usr/src/oj/code -v "e:/usr/cases":/usr/src/oj/cases pushyzheng/go-docker-judger
 ```
 
-But your computer must have `Main.java` in `e:/usr/pushy`, if don't have this path, you can change it in top command.
+But your computer must exits `Main.java` in `e:/usr/pushy`, if don't have this path, you can change it in top command.
 
 In addition, you can put case file to `/e:/usr/cases`, the form of test case file as following:
 

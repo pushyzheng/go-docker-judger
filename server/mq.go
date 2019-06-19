@@ -10,6 +10,7 @@ import (
 var conn *amqp.Connection
 var ch *amqp.Channel
 
+// 初始化连接和Channel
 func InitRabbitMQ() {
 	var err error
 
@@ -26,6 +27,7 @@ func InitRabbitMQ() {
 	}
 }
 
+// 开始消费队列，准备接收业务端发送的消息任务
 func StartConsuming() {
 	queue, err := ch.QueueDeclare(
 		"go-docker-judger", false, false,

@@ -1,0 +1,7 @@
+FROM openjdk:8-alpine
+
+MAINTAINER Pushy
+
+COPY . /usr/src/oj
+
+WORKDIR /usr/src/oj

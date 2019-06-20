@@ -8,7 +8,9 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"io/ioutil"
 	"pushy.site/go-docker-judger/conf"
+	"pushy.site/go-docker-judger/models"
 	"strings"
 )
 
@@ -24,14 +26,15 @@ func InitCore() {
 }
 
 // 启动容器
-func startContainer(id string, caseId string) container.ContainerCreateCreatedBody {
+func startContainer(task models.JudgementTask) container.ContainerCreateCreatedBody {
 	binds := []string{conf.Volume.GetCodePath(), conf.Volume.GetCasePath()}
 
-	casePath := fmt.Sprintf("case%s.txt", caseId)
+	//codePath := fmt.Sprintf("code/%s/Main.java", task.UserId)
+	casePath := fmt.Sprintf("../../cases/case%s.txt", "2")
 
 	config := &container.Config{
 		Image: conf.Container.GetImageName(),
-		Cmd:   []string{"sh", "run.sh", casePath},}
+		Cmd:   []string{"sh", "run.sh", task.UserId, casePath},}
 
 	// create container from local image
 	resp, err := cli.ContainerCreate(ctx, config,
@@ -49,8 +52,8 @@ func startContainer(id string, caseId string) container.ContainerCreateCreatedBo
 }
 
 // 运行容器，获取输出
-func StartJudge(id string, caseId string) (*bytes.Buffer, *bytes.Buffer) {
-	resp := startContainer(id, caseId)
+func StartJudge(task models.JudgementTask) (*bytes.Buffer, *bytes.Buffer) {
+	resp := startContainer(task)
 
 	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
@@ -77,7 +80,7 @@ func StartJudge(id string, caseId string) (*bytes.Buffer, *bytes.Buffer) {
 	return stdout, stderr
 }
 
-// 获取第一行的输出结果，即为判题的结果标志，有WA/RE/AC...
+// 获取第一行的输出结果，即为判题的结果标志
 func GetJudgeResult(stdout *bytes.Buffer) string {
 	data := stdout.Bytes()
 
@@ -93,12 +96,36 @@ func GetJudgeResult(stdout *bytes.Buffer) string {
 	return result.String()
 }
 
-func Run() {
-	stdout, stderr := StartJudge("1", "2")
+func Run(task models.JudgementTask) (string, string) {
+	fmt.Println("Start a judgement task :")
+	fmt.Println(task)
 
+	stdout, stderr := StartJudge(task)
 	result := GetJudgeResult(stdout)
+	if result != "" {  // 编译错误或者运行时异常
+		fmt.Println(result)
+		return result, stderr.String()
+	}
 
-	fmt.Println("判题结果：" + result)
-	fmt.Println("[out] \n", stdout)
-	fmt.Println("[error] \n", stderr)
+	outputPath := fmt.Sprintf("%s/%s/result.txt", conf.Volume.CodeHostPath, task.UserId)
+	outputBytes, err := ioutil.ReadFile(outputPath)
+	if err != nil {
+		fmt.Println("The output path not found")
+	}
+	output := string(outputBytes)
+
+	answerPath := fmt.Sprintf("%s/answer_%s.txt", conf.Volume.AnswerHostPath, "1")
+	answerBytes, err := ioutil.ReadFile(answerPath)
+	if err != nil {
+		fmt.Println("The answer path not found")
+	}
+	answer := string(answerBytes)
+
+	if output == answer {
+		result = models.AC
+	} else {
+		result = models.WA
+	}
+
+	return result, ""
 }

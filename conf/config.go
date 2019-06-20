@@ -12,6 +12,8 @@ type VolumePathConfig struct {
 	CodeTargetPath string // 挂载到容器内的代码路径
 	CaseHostPath   string // 存放测试样例文件（输入文件）宿主机路径
 	CaseTargetPath string // 挂载到容器内样例文件路径
+
+	AnswerHostPath string // 答案文件主机路径
 }
 
 type RabbitMQConfig struct {

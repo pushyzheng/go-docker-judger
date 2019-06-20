@@ -9,9 +9,11 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"io/ioutil"
+	"log"
 	"pushy.site/go-docker-judger/conf"
 	"pushy.site/go-docker-judger/models"
-	"strings"
+	"pushy.site/go-docker-judger/utils"
+	"strconv"
 )
 
 var cli *client.Client
@@ -85,30 +87,23 @@ func StartJudge(task models.JudgementTask) (*bytes.Buffer, *bytes.Buffer) {
 
 // 获取第一行的输出结果，即为判题的结果标志
 func GetJudgeResult(stdout *bytes.Buffer) string {
-	data := stdout.Bytes()
-
-	var result strings.Builder
-	var resultEnd int
-	for i, each := range data {
-		if each == '\n' {
-			resultEnd = i
-			break
-		}
-	}
-	result.Write(data[:resultEnd])
-	return result.String()
+	return utils.GetFirstLineByBytes(stdout)
 }
 
-func Run(task models.JudgementTask) (string, string) {
-	fmt.Println("Start a judgement task :")
-	fmt.Println(task)
-
-	stdout, stderr := StartJudge(task)
-	result := GetJudgeResult(stdout)
-	if result != "" {  // 编译错误或者运行时异常
-		fmt.Println(result)
-		return result, stderr.String()
+// 获取程序运行时间（不包括编译的时间）
+func GetRuntimeTime(stderr *bytes.Buffer) float64 {
+	line := utils.GetFirstLineByBytes(stderr)
+	timeStr := line[8 : len(line)-1]
+	time, err := strconv.ParseFloat(timeStr, 64)
+	if err != nil{
+		return -1.0
 	}
+	return time
+}
+
+// 校验答案是否正确
+func ValidAnswer(task models.JudgementTask) string {
+	var result string
 
 	outputPath := fmt.Sprintf("%s/%s/result.txt", conf.Volume.CodeHostPath, task.UserId)
 	outputBytes, err := ioutil.ReadFile(outputPath)
@@ -130,5 +125,40 @@ func Run(task models.JudgementTask) (string, string) {
 		result = models.WA
 	}
 
-	return result, ""
+	return result
+}
+
+func Run(task models.JudgementTask) (string, string) {
+	log.Println("Start a judgement task :")
+	log.Println(task)
+
+	stdout, stderr := StartJudge(task)
+	status := GetJudgeResult(stdout)
+
+	log.Println("[stdout]")
+	log.Println(stdout.String())
+	log.Println("[stderr]")
+	log.Println(stderr.String())
+
+	// 判断编译错误或者运行时异常
+	if status == models.CE || status == models.RE {
+		log.Println("Runtime exception or compile error")
+		if utils.GetFirstLineByBytes(stderr) == "Killed" {  // 超出内存限制判断
+			status = models.MLE
+			log.Println("Memory limit exceed")
+		}
+		return status, stderr.String()
+	}
+
+	// 校验是否超时
+	time := GetRuntimeTime(stderr)
+	if time > float64(task.TimeLimit) {
+		status = models.TLE
+		return status, ""
+	}
+
+	// 校验用户程序输出的答案是否和标准答案一致
+	status = ValidAnswer(task)
+
+	return status, ""
 }

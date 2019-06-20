@@ -8,9 +8,11 @@ then
     exit 1
 fi
 
-java Main < $2 > result.txt
+time java Main < $2 > result.txt
 if [ $? -ne 0 ]
 then
     echo "RUNTIME_ERROR"
     exit 1
+else
+    echo "SUCCEED"
 fi

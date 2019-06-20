@@ -15,9 +15,8 @@ func main() {
 	task.UserId = "123"
 	task.ProblemId = 1
 	task.TimeLimit = 1
-	task.MemoryLimit = 32
+	task.MemoryLimit = 30
 
-	result, errorInfo := judger.Run(task)
-	fmt.Println(result)
-	fmt.Println(errorInfo)
+	status, _ := judger.Run(task)
+	fmt.Println("Status: " + status)
 }

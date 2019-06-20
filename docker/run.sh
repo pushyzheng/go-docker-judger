@@ -1,27 +1,16 @@
 #!/usr/bin/env bash
-javac $1
+cd code/$1
+javac Main.java
 
-if [[ $? -ne 0 ]]
-then 
-    echo "CE"
+if [ $? -ne 0 ]
+then
+    echo "COMPILE_ERROR"
     exit 1
 fi
-
-cd code
 
 java Main < $2 > result.txt
-if [[ $? -ne 0 ]]
+if [ $? -ne 0 ]
 then
-    echo "RE"
+    echo "RUNTIME_ERROR"
     exit 1
 fi
-
-cmp ../answer.txt result.txt
-if [[ $? -eq 0 ]]
-then
-    echo "AC"
-else
-    echo "WA"
-fi
-
-cat result.txt

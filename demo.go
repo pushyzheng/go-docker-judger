@@ -13,6 +13,9 @@ func main() {
 
 	task := models.JudgementTask{}
 	task.UserId = "123"
+	task.ProblemId = 1
+	task.TimeLimit = 1
+	task.MemoryLimit = 32
 
 	result, errorInfo := judger.Run(task)
 	fmt.Println(result)

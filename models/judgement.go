@@ -6,10 +6,12 @@ import (
 )
 
 type JudgementTask struct {
-	Id        string `json:"id"`        // 任务ID
-	ProblemId string `json:"problem_Id"` // 问题ID
-	UserId    string `json:"user_id"`    // 用户ID
-	Language  string `json:"language"`  // 代码语言
+	Id          string `json:"id"`           // 任务ID
+	ProblemId   int    `json:"problem_Id"`   // 问题ID
+	UserId      string `json:"user_id"`      // 用户ID
+	Language    string `json:"language"`     // 代码语言
+	TimeLimit   int    `json:"time_limit"`   // 时间限制，单位为s
+	MemoryLimit int    `json:"memory_limit"` // 内存限制，单位为MB
 
 	//Timestamp time.Time `json:"timestamp"`
 }

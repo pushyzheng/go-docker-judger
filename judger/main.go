@@ -29,22 +29,25 @@ func InitCore() {
 func startContainer(task models.JudgementTask) container.ContainerCreateCreatedBody {
 	binds := []string{conf.Volume.GetCodePath(), conf.Volume.GetCasePath()}
 
-	//codePath := fmt.Sprintf("code/%s/Main.java", task.UserId)
-	casePath := fmt.Sprintf("../../cases/case%s.txt", "2")
+	casePath := fmt.Sprintf("../../cases/case_%d.txt", task.ProblemId)
 
 	config := &container.Config{
 		Image: conf.Container.GetImageName(),
 		Cmd:   []string{"sh", "run.sh", task.UserId, casePath},}
 
-	// create container from local image
+	// 容器资源配置，内存限制、CPU限制等
+	memoryLimit := int64(task.MemoryLimit * 1024 * 1024)
+	resourceConfig := container.Resources{Memory: memoryLimit}
+
+	// 从本地镜像中创建容器，并传入配置选项
 	resp, err := cli.ContainerCreate(ctx, config,
-		&container.HostConfig{Binds: binds},
+		&container.HostConfig{Binds: binds, Resources: resourceConfig},
 		nil, "")
 
 	if err != nil {
 		panic(err)
 	}
-	// start container
+	// 启动容器
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		panic(err)
 	}
@@ -114,7 +117,7 @@ func Run(task models.JudgementTask) (string, string) {
 	}
 	output := string(outputBytes)
 
-	answerPath := fmt.Sprintf("%s/answer_%s.txt", conf.Volume.AnswerHostPath, "1")
+	answerPath := fmt.Sprintf("%s/answer_%d.txt", conf.Volume.AnswerHostPath, task.ProblemId)
 	answerBytes, err := ioutil.ReadFile(answerPath)
 	if err != nil {
 		fmt.Println("The answer path not found")

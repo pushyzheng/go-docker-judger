@@ -8,7 +8,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"io/ioutil"
 	"log"
 	"pushy.site/go-docker-judger/conf"
 	"pushy.site/go-docker-judger/models"
@@ -87,12 +86,12 @@ func StartJudge(task models.JudgementTask) (*bytes.Buffer, *bytes.Buffer) {
 
 // 获取第一行的输出结果，即为判题的结果标志
 func GetJudgeResult(stdout *bytes.Buffer) string {
-	return utils.GetFirstLineByBytes(stdout)
+	return utils.GetFirstLineByBytes(stdout.Bytes())
 }
 
 // 获取程序运行时间（不包括编译的时间）
 func GetRuntimeTime(stderr *bytes.Buffer) float64 {
-	line := utils.GetFirstLineByBytes(stderr)
+	line := utils.GetFirstLineByBytes(stderr.Bytes())
 	timeStr := line[8 : len(line)-1]
 	time, err := strconv.ParseFloat(timeStr, 64)
 	if err != nil{
@@ -101,64 +100,43 @@ func GetRuntimeTime(stderr *bytes.Buffer) float64 {
 	return time
 }
 
-// 校验答案是否正确
-func ValidAnswer(task models.JudgementTask) string {
-	var result string
-
-	outputPath := fmt.Sprintf("%s/%s/result.txt", conf.Volume.CodeHostPath, task.UserId)
-	outputBytes, err := ioutil.ReadFile(outputPath)
-	if err != nil {
-		fmt.Println("The output path not found")
-	}
-	output := string(outputBytes)
-
-	answerPath := fmt.Sprintf("%s/answer_%d.txt", conf.Volume.AnswerHostPath, task.ProblemId)
-	answerBytes, err := ioutil.ReadFile(answerPath)
-	if err != nil {
-		fmt.Println("The answer path not found")
-	}
-	answer := string(answerBytes)
-
-	if output == answer {
-		result = models.AC
-	} else {
-		result = models.WA
-	}
-
-	return result
-}
-
-func Run(task models.JudgementTask) (string, string) {
-	log.Println("Start a judgement task :")
-	log.Println(task)
+func Run(task models.JudgementTask, result *models.JudgementResult) {
+	log.Println("Start a judgement task : ", task)
 
 	stdout, stderr := StartJudge(task)
 	status := GetJudgeResult(stdout)
 
-	log.Println("[stdout]")
-	log.Println(stdout.String())
-	log.Println("[stderr]")
-	log.Println(stderr.String())
+	log.Println("[stdout]:\n ", stdout.String())
+	log.Println("[stderr]:\n ", stderr.String())
 
 	// 判断编译错误或者运行时异常
 	if status == models.CE || status == models.RE {
 		log.Println("Runtime exception or compile error")
-		if utils.GetFirstLineByBytes(stderr) == "Killed" {  // 超出内存限制判断
+		if utils.GetFirstLineByBytes(stderr.Bytes()) == "Killed" { // 超出内存限制判断
 			status = models.MLE
 			log.Println("Memory limit exceed")
 		}
-		return status, stderr.String()
+		result.Result = status
+		result.ErrorInfo = stderr.String()
+		return
 	}
 
 	// 校验是否超时
 	time := GetRuntimeTime(stderr)
+	log.Println("Runtime time is: ", time)
 	if time > float64(task.TimeLimit) {
-		status = models.TLE
-		return status, ""
+		log.Println("Time limit exceed error")
+		result.Result = models.TLE
+		return
 	}
 
 	// 校验用户程序输出的答案是否和标准答案一致
-	status = ValidAnswer(task)
+	verifyResult, err := VerifyAnswer(task)
+	if err != nil {
+		result.Result = models.SE
+		result.ErrorInfo = err.Error()
+		return
+	}
 
-	return status, ""
+	result.Result = verifyResult.Status
 }

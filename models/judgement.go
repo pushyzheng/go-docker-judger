@@ -27,6 +27,13 @@ type JudgementResult struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+type VerificationResult struct {
+	Status         string `json:"status"`          // 校验结果，AC/WA
+	LastInput      string `json:"last_input"`      // 最后输入
+	LastOutput     string `json:"last_output"`     // 最后输出
+	ExpectedOutput string `json:"expected_output"` // 期望的正确输出
+}
+
 func (result *JudgementResult) ToJsonString() []byte {
 	data, _ := json.Marshal(result)
 	return data

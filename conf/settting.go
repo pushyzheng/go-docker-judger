@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"fmt"
 	"github.com/go-ini/ini"
 	"log"
 )
@@ -12,6 +13,8 @@ var RabbitMQ = &RabbitMQConfig{}
 var cfg *ini.File
 
 func InitConfig() {
+	log.Println("Reading project config from conf/app.ini ...")
+
 	var err error
 	cfg, err = ini.Load("conf/app.ini")
 	if err != nil {
@@ -20,6 +23,10 @@ func InitConfig() {
 	mapTo("volume", Volume)
 	mapTo("container", Container)
 	mapTo("rabbitmq", RabbitMQ)
+
+	log.Println("Docker image name is", Container.ImageRepository, ":", Container.ImageTag)
+	log.Println(fmt.Sprintf("code path: %s, case path: %s, answer path: %s",
+		Volume.CodeHostPath, Volume.CaseHostPath, Volume.AnswerHostPath))
 }
 
 func mapTo(section string, v interface{}) {

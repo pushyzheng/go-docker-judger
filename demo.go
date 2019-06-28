@@ -1,13 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
-	"io/ioutil"
+	"log"
 	"pushy.site/go-docker-judger/conf"
 	"pushy.site/go-docker-judger/judger"
 	"pushy.site/go-docker-judger/models"
-	"pushy.site/go-docker-judger/utils"
 )
 
 func Run() {
@@ -19,25 +16,19 @@ func Run() {
 	task.ProblemId = 1
 	task.TimeLimit = 1
 	task.MemoryLimit = 30
+	task.Language = "java"
 
-	//result, _ := judger.Run(task)
-	//fmt.Println("Status: " + result.Status)
+	result := models.JudgementResult{}
+	judger.Run(task, &result)
+
+	log.Println("Status: ", result.Status)
+	log.Println("errorInfo: ", result.ErrorInfo)
+
+	log.Println("Last input: ", result.LastInput)
+	log.Println("Last output: ", result.LastOutput)
+	log.Println("Expected output: ", result.ExpectedOutput)
 }
 
 func main() {
-	//Run()
-
-	fileBytes, err := ioutil.ReadFile("e:/usr/answers/answer_1.txt")
-	if err != nil {
-		panic(err)
-	}
-
-	var b bytes.Buffer
-	b.Write(fileBytes)
-
-	line := utils.GetLineByBytes(b.Bytes(), 3)
-	fmt.Println(line)
-
-	count := utils.GetLineCountByBytes(b.Bytes())
-	fmt.Println("count:", count)
+	Run()
 }

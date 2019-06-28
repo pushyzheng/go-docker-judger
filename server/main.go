@@ -19,7 +19,7 @@ func HandleMQMessage(msgs <-chan amqp.Delivery) {
 		err := json.Unmarshal(d.Body, &task)
 		if err != nil {
 			result.Succeed = false
-			result.Result = models.SE
+			result.Status = models.SE
 			result.ErrorInfo = "The form of task is illegal"
 		} else {
 			doHandle(task, &result)

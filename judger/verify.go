@@ -19,29 +19,28 @@ func ReadBytesByPath(path string) []byte {
 }
 
 // 校验答案的主方法
-func VerifyAnswer(task models.JudgementTask) (models.VerificationResult, error) {
-	var result models.VerificationResult
-
+func VerifyAnswer(task models.JudgementTask, result *models.JudgementResult) error {
 	outputPath := fmt.Sprintf("%s/%s/result.txt", conf.Volume.CodeHostPath, task.UserId)
 	outputBytes := ReadBytesByPath(outputPath)
 	if outputBytes == nil {
-		return result, fmt.Errorf("OUTPUT PATH NOT FOUND")
+		return fmt.Errorf("OUTPUT PATH NOT FOUND")
 	}
 
 	answerPath := fmt.Sprintf("%s/answer_%d.txt", conf.Volume.AnswerHostPath, task.ProblemId)
 	answerBytes := ReadBytesByPath(answerPath)
 	if answerBytes == nil {
-		return result, fmt.Errorf("ANSWER PATH NOT FOUND")
+		return fmt.Errorf("ANSWER PATH NOT FOUND")
 	}
 
-	wrongLine := doVerify(outputBytes, answerBytes, &result)
+	wrongLine := doVerify(outputBytes, answerBytes, result)
 	log.Println("wrong line: ", wrongLine)
 
 	if result.Status == models.WA {
 		result.LastInput = getLastInput(task.ProblemId, wrongLine)
 	}
+	result.WrongLine = wrongLine
 
-	return result, nil
+	return nil
 }
 
 // 获取测试样例中对应的行数即为最后的输入
@@ -52,7 +51,7 @@ func getLastInput(problemId int, wrongLine int) string {
 }
 
 // 逐行校验用户程序输出与标准答案
-func doVerify(outputBytes []byte, answerBytes []byte, result *models.VerificationResult) int {
+func doVerify(outputBytes []byte, answerBytes []byte, result *models.JudgementResult) int {
 	count := utils.GetLineCountByBytes(answerBytes)
 	log.Println("Total line: ", count)
 

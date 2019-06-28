@@ -28,13 +28,16 @@ func InitCore() {
 
 // 启动容器
 func startContainer(task models.JudgementTask) container.ContainerCreateCreatedBody {
-	binds := []string{conf.Volume.GetCodePath(), conf.Volume.GetCasePath()}
+	v2Path := "e:/usr/scripts"
+	v2Volume := fmt.Sprintf("%s:/root", v2Path)
+
+	binds := []string{conf.Volume.GetCodePath(), conf.Volume.GetCasePath(), v2Volume}
 
 	casePath := fmt.Sprintf("../../cases/case_%d.txt", task.ProblemId)
 
 	config := &container.Config{
 		Image: conf.Container.GetImageName(),
-		Cmd:   []string{"sh", "run.sh", task.UserId, casePath},}
+		Cmd:   []string{"/bin/bash", getScriptName(task.Language), task.UserId, casePath},}
 
 	// 容器资源配置，内存限制、CPU限制等
 	memoryLimit := int64(task.MemoryLimit * 1024 * 1024)
@@ -94,7 +97,7 @@ func GetRuntimeTime(stderr *bytes.Buffer) float64 {
 	line := utils.GetFirstLineByBytes(stderr.Bytes())
 	timeStr := line[8 : len(line)-1]
 	time, err := strconv.ParseFloat(timeStr, 64)
-	if err != nil{
+	if err != nil {
 		return -1.0
 	}
 	return time
@@ -116,7 +119,7 @@ func Run(task models.JudgementTask, result *models.JudgementResult) {
 			status = models.MLE
 			log.Println("Memory limit exceed")
 		}
-		result.Result = status
+		result.Status = status
 		result.ErrorInfo = stderr.String()
 		return
 	}
@@ -126,17 +129,30 @@ func Run(task models.JudgementTask, result *models.JudgementResult) {
 	log.Println("Runtime time is: ", time)
 	if time > float64(task.TimeLimit) {
 		log.Println("Time limit exceed error")
-		result.Result = models.TLE
+		result.Status = models.TLE
 		return
 	}
 
 	// 校验用户程序输出的答案是否和标准答案一致
-	verifyResult, err := VerifyAnswer(task)
+	err := VerifyAnswer(task, result)
 	if err != nil {
-		result.Result = models.SE
+		result.Status = models.SE
 		result.ErrorInfo = err.Error()
 		return
 	}
 
-	result.Result = verifyResult.Status
+	result.RuntimeTime = time
+}
+
+func getScriptName(language string) string {
+	if language == "java" {
+		return "run_java.sh"
+	} else if language == "python" {
+		return "run_python.sh"
+	} else if language == "js" {
+		return "run_js.sh"
+	} else if language == "c" || language == "cpp" {
+		return "run_c.sh"
+	}
+	return ""
 }

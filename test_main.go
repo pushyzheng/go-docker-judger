@@ -27,7 +27,9 @@ func main() {
 	task.TimeLimit = 1
 	task.MemoryLimit = 30
 
-	result, err := judger.VerifyAnswer(task)
+	result := models.JudgementResult{}
+
+	err := judger.VerifyAnswer(task, &result)
 	if err != nil{
 		panic(err)
 	}

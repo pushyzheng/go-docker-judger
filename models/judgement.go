@@ -17,21 +17,19 @@ type JudgementTask struct {
 }
 
 type JudgementResult struct {
-	Id        string `json:"id"`        // 对应的任务ID
-	Succeed   bool   `json:"succeed"`   // 是否成功判题
-	Result    string `json:"result"`    // 判题结果
-	Duration  int    `json:"duration"`  // 运行的时长
-	Memory    int    `json:"memory"`    // 占用的内存
-	ErrorInfo string `json:"errorInfo"` // 错误信息
+	Id            string  `json:"id"`             // 对应的任务ID
+	Succeed       bool    `json:"succeed"`        // 是否成功判题
+	Status        string  `json:"status"`         // 判题结果
+	RuntimeTime   float64 `json:"runtime_time"`   // 运行的时长
+	RuntimeMemory int     `json:"runtime_memory"` // 占用的内存
 
-	Timestamp time.Time `json:"timestamp"`
-}
-
-type VerificationResult struct {
-	Status         string `json:"status"`          // 校验结果，AC/WA
+	WrongLine      int    `json:"wrong_line"`      // 错误的行数
 	LastInput      string `json:"last_input"`      // 最后输入
 	LastOutput     string `json:"last_output"`     // 最后输出
 	ExpectedOutput string `json:"expected_output"` // 期望的正确输出
+	ErrorInfo      string `json:"error_info"`      // 错误信息
+
+	Timestamp time.Time `json:"timestamp"`
 }
 
 func (result *JudgementResult) ToJsonString() []byte {

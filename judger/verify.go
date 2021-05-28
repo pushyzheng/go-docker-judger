@@ -2,11 +2,11 @@ package judger
 
 import (
 	"fmt"
+	"go-docker-judger/conf"
+	"go-docker-judger/models"
+	"go-docker-judger/utils"
 	"io/ioutil"
 	"log"
-	"pushy.site/go-docker-judger/conf"
-	"pushy.site/go-docker-judger/models"
-	"pushy.site/go-docker-judger/utils"
 )
 
 // 读取文件的bytes

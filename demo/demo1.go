@@ -10,7 +10,6 @@ import (
 	"os"
 )
 
-
 func GetAllImage(cli *client.Client, ctx context.Context) {
 	imgs, err := cli.ImageList(ctx, types.ImageListOptions{})
 	if err != nil {
@@ -35,8 +34,8 @@ func CreateHelloWorld(cli *client.Client, ctx context.Context) {
 	// create container from local image
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: "ubuntu",
-		Cmd: []string{"ls"},
-	}, nil, nil, "")
+		Cmd:   []string{"ls"},
+	}, nil, nil, nil, "")
 
 	if err != nil {
 		panic(err)

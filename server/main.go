@@ -3,9 +3,9 @@ package server
 import (
 	"encoding/json"
 	"github.com/streadway/amqp"
+	"go-docker-judger/judger"
+	"go-docker-judger/models"
 	"log"
-	"pushy.site/go-docker-judger/judger"
-	"pushy.site/go-docker-judger/models"
 )
 
 // 处理服务端通过消息队列发送的判题任务
@@ -32,7 +32,7 @@ func HandleMQMessage(msgs <-chan amqp.Delivery) {
 // 真正处理消息的逻辑方法
 func doHandle(task models.JudgementTask, result *models.JudgementResult) {
 	result.Id = task.Id
-	judger.Run(task, result)  // 判题核心
+	judger.Run(task, result) // 判题核心
 }
 
 // 处理完判题任务之后，发布到消息队列

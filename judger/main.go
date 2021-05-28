@@ -8,10 +8,10 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"go-docker-judger/conf"
+	"go-docker-judger/models"
+	"go-docker-judger/utils"
 	"log"
-	"pushy.site/go-docker-judger/conf"
-	"pushy.site/go-docker-judger/models"
-	"pushy.site/go-docker-judger/utils"
 	"strconv"
 )
 
@@ -37,7 +37,7 @@ func startContainer(task models.JudgementTask) container.ContainerCreateCreatedB
 
 	config := &container.Config{
 		Image: conf.Container.GetImageName(),
-		Cmd:   []string{"/bin/bash", getScriptName(task.Language), task.UserId, casePath},}
+		Cmd:   []string{"/bin/bash", getScriptName(task.Language), task.UserId, casePath}}
 
 	// 容器资源配置，内存限制、CPU限制等
 	memoryLimit := int64(task.MemoryLimit * 1024 * 1024)
@@ -46,7 +46,7 @@ func startContainer(task models.JudgementTask) container.ContainerCreateCreatedB
 	// 从本地镜像中创建容器，并传入配置选项
 	resp, err := cli.ContainerCreate(ctx, config,
 		&container.HostConfig{Binds: binds, Resources: resourceConfig},
-		nil, "")
+		nil, nil, "")
 
 	if err != nil {
 		panic(err)

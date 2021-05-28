@@ -1,10 +1,10 @@
 package main
 
 import (
+	"go-docker-judger/conf"
+	"go-docker-judger/judger"
+	"go-docker-judger/models"
 	"log"
-	"pushy.site/go-docker-judger/conf"
-	"pushy.site/go-docker-judger/judger"
-	"pushy.site/go-docker-judger/models"
 )
 
 func Run() {

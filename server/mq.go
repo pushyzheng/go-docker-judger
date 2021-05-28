@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 	"github.com/streadway/amqp"
+	"go-docker-judger/conf"
 	"log"
-	"pushy.site/go-docker-judger/conf"
 )
 
 var conn *amqp.Connection

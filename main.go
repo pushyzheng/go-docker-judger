@@ -1,11 +1,10 @@
 package main
 
 import (
-	"pushy.site/go-docker-judger/conf"
-	"pushy.site/go-docker-judger/judger"
-	"pushy.site/go-docker-judger/server"
+	"go-docker-judger/conf"
+	"go-docker-judger/judger"
+	"go-docker-judger/server"
 )
-
 
 func main() {
 	conf.InitConfig()
